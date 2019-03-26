@@ -3,6 +3,7 @@ package com.example.paras.amypcure;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
@@ -15,13 +16,22 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,9 +39,11 @@ public class MainActivity extends AppCompatActivity {
             buttonUploadAudio ;
     String AudioSavePathInDevice = null;
     MediaRecorder mediaRecorder ;
+    TextView testView1,testView2,testView3;
     Random random ;
     public static final int RequestPermissionCode = 1;
     MediaPlayer mediaPlayer ;
+    String Url="http://10.0.2.2:5000/upload";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
         buttonPlayLastRecordAudio.setEnabled(false);
         buttonUploadAudio.setEnabled(false);
 
+        testView1=(TextView) findViewById(R.id.text1);
+        testView2=(TextView) findViewById(R.id.text2);
+        testView3=(TextView) findViewById(R.id.text3);
         // taking permission
 
         if(!checkPermission())
@@ -85,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    //buttonStart.setEnabled(false);
+                    buttonStart.setEnabled(false);
                     buttonStop.setEnabled(true);
                     buttonUploadAudio.setEnabled(false);
                     buttonPlayLastRecordAudio.setEnabled(false);
@@ -132,6 +147,14 @@ public class MainActivity extends AppCompatActivity {
                         Toast.LENGTH_LONG).show();
             }
         });
+        buttonUploadAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                (new UploadtoServer()).execute();
+
+            }
+        });
     }
 
     @Override
@@ -175,5 +198,47 @@ public class MainActivity extends AppCompatActivity {
         mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         mediaRecorder.setOutputFile(AudioSavePathInDevice);
     }
-}
+    public void test_Upload() throws Exception {
 
+        File file = new File(AudioSavePathInDevice);
+
+        MultipartBody.Builder data = new MultipartBody.Builder();
+        data.setType(MultipartBody.FORM);
+        data.addFormDataPart("file","AudioRecording.3gp", RequestBody.create(MediaType.parse("media/type"), file));
+        RequestBody requestBody = data.build();
+
+        Request uploadRequest = new Request.Builder()
+                .url(Url)
+                .post(requestBody)
+                .build();
+
+
+        Request request = new Request.Builder()
+                .url(Url)
+                .get()
+                .build();
+
+        OkHttpClient client = new OkHttpClient.Builder().build();
+
+        Response resp = client.newCall(request).execute();
+        Response uploadResponse = client.newCall(uploadRequest).execute();
+
+        String output= resp.body().string();
+        testView1.setText(output);
+        testView2.setText(output);
+        testView3.setText(output);
+        //System.out.println("vjnfdvjbdjvbdjvbj : " + uploadResponse.body().string());
+    }
+    private class UploadtoServer extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                test_Upload();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+}
