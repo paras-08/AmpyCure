@@ -4,6 +4,7 @@ import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -14,7 +15,9 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.Random;
 
 import static android.Manifest.permission.RECORD_AUDIO;
@@ -45,6 +48,12 @@ public class MainActivity extends AppCompatActivity {
         buttonPlayLastRecordAudio.setEnabled(false);
         buttonUploadAudio.setEnabled(false);
 
+        // taking permission
+
+        if(!checkPermission())
+            requestPermission();
+
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,6 +63,75 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        buttonStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if(checkPermission()) {
+
+                    AudioSavePathInDevice =
+                            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "AudioRecording.3gp";
+
+                    MediaRecorderReady();
+
+                    try {
+                        mediaRecorder.prepare();
+                        mediaRecorder.start();
+                    } catch (IllegalStateException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                    //buttonStart.setEnabled(false);
+                    buttonStop.setEnabled(true);
+                    buttonUploadAudio.setEnabled(false);
+                    buttonPlayLastRecordAudio.setEnabled(false);
+                    Toast.makeText(MainActivity.this, "Recording started",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    requestPermission();
+                }
+
+            }
+        });
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mediaRecorder.stop();
+                buttonStop.setEnabled(false);
+                buttonPlayLastRecordAudio.setEnabled(true);
+                buttonStart.setEnabled(true);
+                buttonUploadAudio.setEnabled(true);
+
+                Toast.makeText(MainActivity.this, "Recording Completed",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+        buttonPlayLastRecordAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) throws IllegalArgumentException,
+                    SecurityException, IllegalStateException {
+
+                buttonStop.setEnabled(false);
+                buttonStart.setEnabled(false);
+
+                mediaPlayer = new MediaPlayer();
+                try {
+                    mediaPlayer.setDataSource(AudioSavePathInDevice);
+                    mediaPlayer.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                mediaPlayer.start();
+                buttonStart.setEnabled(true);
+                Toast.makeText(MainActivity.this, "Recording Playing",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
@@ -89,6 +167,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    public void MediaRecorderReady(){
+        mediaRecorder=new MediaRecorder();
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+        mediaRecorder.setOutputFile(AudioSavePathInDevice);
     }
 }
 
