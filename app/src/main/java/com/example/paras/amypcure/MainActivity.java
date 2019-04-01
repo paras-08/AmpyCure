@@ -19,12 +19,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static java.lang.Thread.sleep;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -43,7 +48,13 @@ public class MainActivity extends AppCompatActivity {
     Random random ;
     public static final int RequestPermissionCode = 1;
     MediaPlayer mediaPlayer ;
-    String Url="http://10.0.2.2:5000/upload";
+    String Urlupload="http://ampycure.herokuapp.com/upload";
+    String Urlcheck="http://ampycure.herokuapp.com/done";
+    String Urlresult="http://ampycure.herokuapp.com/getresult";
+    //String Urlupload="http://192.168.50.201:5000/upload";
+    //String Urlupload="http://192.168.50.201:5000/upload";
+    //String Urlcheck="http://192.168.50.201:5000/done";
+    //String Urlresult="http://192.168.50.201:5000/getresult";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             requestPermission();
 
 
+        //testView1.setText("opu");
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 if(checkPermission()) {
 
                     AudioSavePathInDevice =
-                            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "AudioRecording.3gp";
+                            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "AudioRecording.wav";
 
                     MediaRecorderReady();
 
@@ -204,29 +216,119 @@ public class MainActivity extends AppCompatActivity {
 
         MultipartBody.Builder data = new MultipartBody.Builder();
         data.setType(MultipartBody.FORM);
-        data.addFormDataPart("file","AudioRecording.3gp", RequestBody.create(MediaType.parse("media/type"), file));
+        data.addFormDataPart("file","AudioRecording.wav", RequestBody.create(MediaType.parse("media/type"), file));
         RequestBody requestBody = data.build();
 
         Request uploadRequest = new Request.Builder()
-                .url(Url)
+                .url(Urlupload)
                 .post(requestBody)
                 .build();
 
 
-        Request request = new Request.Builder()
+        /*Request request = new Request.Builder()
                 .url(Url)
                 .get()
-                .build();
+                .build();*/
 
-        OkHttpClient client = new OkHttpClient.Builder().build();
+        OkHttpClient client = new OkHttpClient.Builder().readTimeout(300,TimeUnit.SECONDS).build();
+        //Response resp = client.newCall(request).execute();
 
-        Response resp = client.newCall(request).execute();
         Response uploadResponse = client.newCall(uploadRequest).execute();
+        System.out.println("Upload : " + uploadResponse.body().string());
+        uploadResponse.body().close();
+        System.out.println("After Upload");
+        boolean requestReceived = false;
+        while(true)
+        {
+            System.out.println("Inside loop");
+            Request checkRequest=new Request.Builder().
+                    url(Urlcheck).
+                    get().
+                    build();
+            Response checkResponse = client.newCall(checkRequest).execute();
+            String temp=checkResponse.body().string();
+            System.out.println("Done : " + temp);
+            checkResponse.body().close();
+            if(temp.equals("true"))
+            {
 
-        String output= resp.body().string();
-        testView1.setText(output);
-        testView2.setText(output);
-        testView3.setText(output);
+                //testView1.setText("1236");
+                requestReceived=true;
+                break;
+            }
+            sleep(1000);
+        }
+
+        System.out.println("not requesting for result");
+        Request receiveRequest=new Request.Builder().
+                url(Urlresult).
+                get().
+                build();
+        Response resultResponse = client.newCall(receiveRequest).execute();
+        String result= resultResponse.body().string();
+        resultResponse.body().close();
+        System.out.println("Resp : " + result);
+        String outputAutism,outputParkinson,outputDepression;
+        if(result.charAt(1)=='0')
+        {
+            outputAutism="negative";
+        }
+        else
+        {
+            outputAutism="positive";
+        }
+        if(result.charAt(3)=='0')
+        {
+            outputParkinson="negative";
+        }
+        else
+        {
+            outputParkinson="positive";
+        }
+        if(result.charAt(5)=='0')
+        {
+            outputDepression="negative";
+        }
+        else
+        {
+            outputDepression="positive";
+        }
+        testView1.post(new Runnable() {
+            public void run() {
+                testView1.setText(outputAutism);
+            }
+        });
+        //testView1.setText("opu");
+        testView2.post(new Runnable() {
+            public void run() {
+                testView2.setText(outputParkinson);
+            }
+        });
+        //testView2.setText(outputParkinson);
+        testView3.post(new Runnable() {
+            public void run() {
+                testView3.setText(outputDepression);
+            }
+        });
+        //testView3.setText(outputDepression);
+        System.out.println("78");
+
+
+        /*String jsonData = uploadResponse.body().string();
+        JSONObject Jobject = new JSONObject(jsonData);
+        JSONArray Jarray = Jobject.getJSONArray("results");
+        JSONObject object     = Jarray.getJSONObject(0);
+
+        int check=object.getInt("autism");
+
+        if(check==1)
+        {
+            output="positive";
+        }
+        else
+        {
+            output="negative";
+        }*/
         //System.out.println("vjnfdvjbdjvbdjvbj : " + uploadResponse.body().string());
     }
     private class UploadtoServer extends AsyncTask<Void, Void, Void> {
