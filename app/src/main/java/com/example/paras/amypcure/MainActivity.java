@@ -19,6 +19,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.deskode.recorddialog.RecordDialog;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     TextView testView1,testView2,testView3;
     Random random ;
     public static final int RequestPermissionCode = 1;
+    RecordDialog recordDialog;
     MediaPlayer mediaPlayer ;
     String Urlupload="http://ampycure.herokuapp.com/upload";
     String Urlcheck="http://ampycure.herokuapp.com/done";
@@ -90,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        buttonStart.setOnClickListener(new View.OnClickListener() {
+        /*buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -123,6 +126,24 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
+        });*/
+        buttonStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buttonUploadAudio.setEnabled(true);
+                recordDialog = RecordDialog.newInstance("Record Audio");
+                recordDialog.setMessage("Press for record");
+                recordDialog.show(MainActivity.this.getFragmentManager(),"TAG");
+                recordDialog.setPositiveButton("Save", new RecordDialog.ClickListener() {
+                    @Override
+                    public void OnClickListener(String path) {
+                        AudioSavePathInDevice=path;
+                        Toast.makeText(MainActivity.this,"Save audio: " + path, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+
         });
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -216,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
 
         MultipartBody.Builder data = new MultipartBody.Builder();
         data.setType(MultipartBody.FORM);
-        data.addFormDataPart("file","AudioRecording.wav", RequestBody.create(MediaType.parse("media/type"), file));
+        data.addFormDataPart("file","AudioRecordin.wav", RequestBody.create(MediaType.parse("media/type"), file));
         RequestBody requestBody = data.build();
 
         Request uploadRequest = new Request.Builder()
