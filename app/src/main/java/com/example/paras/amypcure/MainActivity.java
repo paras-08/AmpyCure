@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,13 +52,11 @@ public class MainActivity extends AppCompatActivity {
     public static final int RequestPermissionCode = 1;
     RecordDialog recordDialog;
     MediaPlayer mediaPlayer ;
+    private ProgressBar spinner;
     String Urlupload="http://ampycure.herokuapp.com/upload";
     String Urlcheck="http://ampycure.herokuapp.com/done";
     String Urlresult="http://ampycure.herokuapp.com/getresult";
-    //String Urlupload="http://192.168.50.201:5000/upload";
-    //String Urlupload="http://192.168.50.201:5000/upload";
-    //String Urlcheck="http://192.168.50.201:5000/done";
-    //String Urlresult="http://192.168.50.201:5000/getresult";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,73 +64,28 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //indViewById(R.id.loadingPanel).setVisiblity(View.GONE);
-        //findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
         buttonStart = (Button) findViewById(R.id.button1);
-       /* buttonStop = (Button) findViewById(R.id.button2);
-        buttonPlayLastRecordAudio = (Button) findViewById(R.id.button3);*/
+
         buttonUploadAudio = (Button)findViewById(R.id.button4);
 
-        //buttonStop.setEnabled(false);
-        //buttonPlayLastRecordAudio.setEnabled(false);
         buttonUploadAudio.setEnabled(false);
+
+        spinner = (ProgressBar)findViewById(R.id.progressBar1);
+        spinner.setVisibility(View.GONE);
 
         testView1=(TextView) findViewById(R.id.text1);
         testView2=(TextView) findViewById(R.id.text2);
         testView3=(TextView) findViewById(R.id.text3);
-        // taking permission
 
         if(!checkPermission())
             requestPermission();
 
-
-        //testView1.setText("opu");
-       /* FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
-
-        /*buttonStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if(checkPermission()) {
-
-                    AudioSavePathInDevice =
-                            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "AudioRecording.wav";
-
-                    MediaRecorderReady();
-
-                    try {
-                        mediaRecorder.prepare();
-                        mediaRecorder.start();
-                    } catch (IllegalStateException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                    buttonStart.setEnabled(false);
-                    buttonStop.setEnabled(true);
-                    buttonUploadAudio.setEnabled(false);
-                    buttonPlayLastRecordAudio.setEnabled(false);
-                    Toast.makeText(MainActivity.this, "Recording started",
-                            Toast.LENGTH_LONG).show();
-                } else {
-                    requestPermission();
-                }
-
-            }
-        });*/
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                testView1.setText("N/A");
+                testView2.setText("N/A");
+                testView3.setText("N/A");
                 buttonUploadAudio.setEnabled(true);
                 recordDialog = RecordDialog.newInstance("Record Audio");
                 recordDialog.setMessage("Press for record");
@@ -147,57 +101,18 @@ public class MainActivity extends AppCompatActivity {
 
 
         });
-        /*buttonStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mediaRecorder.stop();
-                buttonStop.setEnabled(false);
-                buttonPlayLastRecordAudio.setEnabled(true);
-                buttonStart.setEnabled(true);
-                buttonUploadAudio.setEnabled(true);
-
-                Toast.makeText(MainActivity.this, "Recording Completed",
-                        Toast.LENGTH_LONG).show();
-            }
-        });
-        buttonPlayLastRecordAudio.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) throws IllegalArgumentException,
-                    SecurityException, IllegalStateException {
-
-                buttonStop.setEnabled(false);
-                buttonStart.setEnabled(false);
-
-                mediaPlayer = new MediaPlayer();
-                try {
-                    mediaPlayer.setDataSource(AudioSavePathInDevice);
-                    mediaPlayer.prepare();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                mediaPlayer.start();
-                buttonStart.setEnabled(true);
-                Toast.makeText(MainActivity.this, "Recording Playing",
-                        Toast.LENGTH_LONG).show();
-            }
-        });*/
         buttonUploadAudio.setOnClickListener(new View.OnClickListener() {
-          //  findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             @Override
             public void onClick(View view) {
 
-                //findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
+                spinner.setVisibility(View.VISIBLE);
                 (new UploadtoServer()).execute();
-
-                //findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             }
         });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -217,12 +132,8 @@ public class MainActivity extends AppCompatActivity {
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -250,14 +161,8 @@ public class MainActivity extends AppCompatActivity {
                 .post(requestBody)
                 .build();
 
-
-        /*Request request = new Request.Builder()
-                .url(Url)
-                .get()
-                .build();*/
-
         OkHttpClient client = new OkHttpClient.Builder().readTimeout(300,TimeUnit.SECONDS).build();
-        //Response resp = client.newCall(request).execute();
+
 
         Response uploadResponse = client.newCall(uploadRequest).execute();
         System.out.println("Upload : " + uploadResponse.body().string());
@@ -324,38 +229,20 @@ public class MainActivity extends AppCompatActivity {
                 testView1.setText(outputAutism);
             }
         });
-        //testView1.setText("opu");
         testView2.post(new Runnable() {
             public void run() {
                 testView2.setText(outputParkinson);
             }
         });
-        //testView2.setText(outputParkinson);
         testView3.post(new Runnable() {
             public void run() {
                 testView3.setText(outputDepression);
             }
         });
-        //testView3.setText(outputDepression);
         System.out.println("78");
-
-
-        /*String jsonData = uploadResponse.body().string();
-        JSONObject Jobject = new JSONObject(jsonData);
-        JSONArray Jarray = Jobject.getJSONArray("results");
-        JSONObject object     = Jarray.getJSONObject(0);
-
-        int check=object.getInt("autism");
-
-        if(check==1)
-        {
-            output="positive";
-        }
-        else
-        {
-            output="negative";
-        }*/
-        //System.out.println("vjnfdvjbdjvbdjvbj : " + uploadResponse.body().string());
+        spinner.setVisibility(View.GONE);
+        file.delete();
+        buttonUploadAudio.setEnabled(false);
     }
     private class UploadtoServer extends AsyncTask<Void, Void, Void> {
 
