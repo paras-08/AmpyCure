@@ -65,13 +65,15 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        //indViewById(R.id.loadingPanel).setVisiblity(View.GONE);
+        //findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
         buttonStart = (Button) findViewById(R.id.button1);
-        buttonStop = (Button) findViewById(R.id.button2);
-        buttonPlayLastRecordAudio = (Button) findViewById(R.id.button3);
+       /* buttonStop = (Button) findViewById(R.id.button2);
+        buttonPlayLastRecordAudio = (Button) findViewById(R.id.button3);*/
         buttonUploadAudio = (Button)findViewById(R.id.button4);
 
-        buttonStop.setEnabled(false);
-        buttonPlayLastRecordAudio.setEnabled(false);
+        //buttonStop.setEnabled(false);
+        //buttonPlayLastRecordAudio.setEnabled(false);
         buttonUploadAudio.setEnabled(false);
 
         testView1=(TextView) findViewById(R.id.text1);
@@ -84,14 +86,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         //testView1.setText("opu");
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+       /* FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
-        });
+        });*/
 
         /*buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -145,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         });
-        buttonStop.setOnClickListener(new View.OnClickListener() {
+        /*buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mediaRecorder.stop();
@@ -179,13 +181,16 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Recording Playing",
                         Toast.LENGTH_LONG).show();
             }
-        });
+        });*/
         buttonUploadAudio.setOnClickListener(new View.OnClickListener() {
+          //  findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             @Override
             public void onClick(View view) {
 
+                //findViewById(R.id.loadingPanel).setVisibility(View.VISIBLE);
                 (new UploadtoServer()).execute();
 
+                //findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             }
         });
     }
@@ -354,7 +359,9 @@ public class MainActivity extends AppCompatActivity {
     }
     private class UploadtoServer extends AsyncTask<Void, Void, Void> {
 
+
         @Override
+
         protected Void doInBackground(Void... voids) {
             try {
                 test_Upload();
